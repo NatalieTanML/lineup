@@ -1,6 +1,19 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electron', {
+  auth: {
+    login(email, password) {
+      return ipcRenderer.sendSync('auth-login', {
+        email,
+        password,
+      });
+    },
+  },
+  meetings: {
+    get() {
+      return ipcRenderer.sendSync('get-meetings');
+    },
+  },
   ipcRenderer: {
     myPing() {
       ipcRenderer.send('ipc-example', 'ping');

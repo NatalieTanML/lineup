@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 
 import { HiOutlineCog } from 'react-icons/hi';
-import Header from '../components/Header';
 import ListHeader from 'components/ListHeader';
 import ListItem from 'components/ListItem';
 import Search from 'components/Search';
+import Header from '../components/Header';
 
 const MenuBar = () => {
   const [input, setInput] = useState<string>('');
