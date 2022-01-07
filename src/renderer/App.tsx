@@ -1,40 +1,25 @@
-import { MemoryRouter as Router, Routes, Route } from 'react-router-dom';
-import icon from '../../assets/icon.svg';
+/* eslint-disable jsx-a11y/label-has-associated-control */
+import { HiCursorClick } from 'react-icons/hi';
+import { MemoryRouter as Router, Route, Routes } from 'react-router-dom';
 import './App.css';
 
 const Hello = () => {
   return (
     <div>
-      <div className="Hello">
-        <img width="200px" alt="icon" src={icon} />
-      </div>
-      <h1>electron-react-boilerplate</h1>
-      <div className="Hello">
-        <a
-          href="https://electron-react-boilerplate.js.org/"
-          target="_blank"
-          rel="noreferrer"
-        >
-          <button type="button">
-            <span role="img" aria-label="books">
-              📚
-            </span>
-            Read our docs
-          </button>
-        </a>
-        <a
-          href="https://github.com/sponsors/electron-react-boilerplate"
-          target="_blank"
-          rel="noreferrer"
-        >
-          <button type="button">
-            <span role="img" aria-label="books">
-              🙏
-            </span>
-            Donate
-          </button>
-        </a>
-      </div>
+      <button
+        type="button"
+        className="group block max-w-xs mx-auto rounded-lg p-6 bg-whitering-1 ring-gray-900/5 shadow-lg space-y-3 hover:bg-sky-500 hover:ring-sky-500"
+      >
+        <div className="flex items-center space-x-3">
+          <HiCursorClick className="h-6 w-6 text-sky-500 group-hover:text-white" />
+          <h3 className="text-gray-900 group-hover:text-white text-sm font-semibold">
+            New project
+          </h3>
+        </div>
+        <p className="text-gray-500 group-hover:text-white text-sm">
+          Create a new project from a variety of starting templates.
+        </p>
+      </button>
     </div>
   );
 };
