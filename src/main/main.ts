@@ -26,7 +26,6 @@ export default class AppUpdater {
 }
 
 const APPLICATION_DIR = app.getPath('userData');
-const STT_DIRECTORY = __dirname;
 
 ipcMain.on('ipc-example', async (event, arg) => {
   const msgTemplate = (pingPong: string) => `IPC test: ${pingPong}`;
@@ -67,7 +66,7 @@ const installExtensions = async () => {
     .catch(console.log);
 };
 
-const createMenubar = async (applicationDir: string, sttDir: string) => {
+const createMenubar = async (applicationDir: string) => {
   if (isDevelopment) {
     await installExtensions();
   }
@@ -101,7 +100,6 @@ const createMenubar = async (applicationDir: string, sttDir: string) => {
     }
     mb.window?.webContents.send('init-menubar', {
       applicationDir,
-      sttDir,
     });
   });
 
@@ -123,7 +121,7 @@ app.on('window-all-closed', () => {
 app
   .whenReady()
   .then(() => {
-    createMenubar(APPLICATION_DIR, STT_DIRECTORY);
+    createMenubar(APPLICATION_DIR);
     app.on('activate', () => {
       // On macOS it's common to re-create a window in the app when the
       // dock icon is clicked and there are no other windows open.
