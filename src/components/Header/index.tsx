@@ -11,13 +11,13 @@ const Header = ({ title, btnContent, handleClick }: Props) => {
   return (
     <div className="flex flex-row items-center">
       <div className="flex flex-1 items-center">
-        <p className="flex-grow text-2xl font-bold tracking-tight text-blue-500">
+        <p className="flex-grow text-2xl font-bold tracking-tight text-blue-400">
           {title}
         </p>
         <button
           type="button"
           onClick={handleClick}
-          className="text-slate-500 hover:stroke-current hover:text-blue-500 focus:outline-none active:text-blue-600 cursor-pointer"
+          className="text-slate-400 hover:stroke-current hover:text-blue-400 focus:outline-none active:text-blue-500 cursor-pointer"
         >
           <IconContext.Provider value={{ size: '1.5em' }}>
             {btnContent}
