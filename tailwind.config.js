@@ -5,6 +5,14 @@ module.exports = {
     './src/**/*.{js,jsx,tsx,ejs,html}',
     './src/**/**/*.{js,jsx,tsx,ejs,html}',
   ],
-  theme: {},
+  theme: {
+    extend: {
+      colors: {
+        slate: {
+          750: '#283548',
+        },
+      },
+    },
+  },
   plugins: [require('@tailwindcss/forms')],
 };

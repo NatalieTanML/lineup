@@ -1,8 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
+
 import { HiOutlineCog } from 'react-icons/hi';
 import Header from '../components/Header';
+import ListHeader from 'components/ListHeader';
+import ListItem from 'components/ListItem';
+import Search from 'components/Search';
 
 const MenuBar = () => {
+  const [input, setInput] = useState<string>('');
+
   return (
     <div className="container mx-auto px-4 my-3 w-full">
       <Header
@@ -11,10 +17,18 @@ const MenuBar = () => {
         handleClick={() => ''}
       />
       <div className="flex flex-row mt-4 gap-x-3 items-center">
-        <div className="flex flex-row p-20 justify-center content-center">
-          <p className="text-slate-500 text-center">No upcoming meetings!</p>
-        </div>
+        <Search
+          keyword={input}
+          setKeyword={setInput}
+          title="Search for a meeting"
+          placeholder="Search"
+        />
       </div>
+      <ListHeader title="7 Jan 2022" />
+      <ListItem />
+      <ListItem />
+      <ListHeader title="8 Jan 2022" />
+      <ListItem />
     </div>
   );
 };
