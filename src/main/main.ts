@@ -9,12 +9,12 @@
  * `./src/main.js` using webpack. This gives us some performance wins.
  */
 import 'core-js/stable';
-import 'regenerator-runtime/runtime';
-import path from 'path';
-import { app, BrowserWindow, shell, ipcMain } from 'electron';
-import { autoUpdater } from 'electron-updater';
+import { app, ipcMain } from 'electron';
 import log from 'electron-log';
-import MenuBuilder from './menu';
+import { autoUpdater } from 'electron-updater';
+import { menubar } from 'menubar';
+import path from 'path';
+import 'regenerator-runtime/runtime';
 import { resolveHtmlPath } from './util';
 
 export default class AppUpdater {
@@ -25,7 +25,7 @@ export default class AppUpdater {
   }
 }
 
-let mainWindow: BrowserWindow | null = null;
+const APPLICATION_DIR = app.getPath('userData');
 
 ipcMain.on('ipc-example', async (event, arg) => {
   const msgTemplate = (pingPong: string) => `IPC test: ${pingPong}`;
@@ -45,6 +45,14 @@ if (isDevelopment) {
   require('electron-debug')();
 }
 
+const RESOURCES_PATH = app.isPackaged
+  ? path.join(process.resourcesPath, 'assets')
+  : path.join(__dirname, '../assets');
+
+const getAssetPath = (...paths: string[]): string => {
+  return path.join(RESOURCES_PATH, ...paths);
+};
+
 const installExtensions = async () => {
   const installer = require('electron-devtools-installer');
   const forceDownload = !!process.env.UPGRADE_EXTENSIONS;
@@ -58,57 +66,43 @@ const installExtensions = async () => {
     .catch(console.log);
 };
 
-const createWindow = async () => {
+const createMenubar = async (applicationDir: string) => {
   if (isDevelopment) {
     await installExtensions();
   }
-
-  const RESOURCES_PATH = app.isPackaged
-    ? path.join(process.resourcesPath, 'assets')
-    : path.join(__dirname, '../../assets');
-
-  const getAssetPath = (...paths: string[]): string => {
-    return path.join(RESOURCES_PATH, ...paths);
-  };
-
-  mainWindow = new BrowserWindow({
-    show: false,
-    width: 1024,
-    height: 728,
-    icon: getAssetPath('icon.png'),
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
+  const mb = menubar({
+    index: resolveHtmlPath('index.html'),
+    tooltip: 'Lineup',
+    icon: getAssetPath(path.join('icons', '16x16.png')),
+    showDockIcon: false,
+    browserWindow: {
+      transparent: false,
+      alwaysOnTop: false,
+      width: 550,
+      height: 600,
+      skipTaskbar: true,
+      resizable: !app.isPackaged,
+      webPreferences: {
+        nodeIntegration: true,
+        // enableRemoteModule: true,
+        devTools: !app.isPackaged,
+      },
     },
   });
 
-  mainWindow.loadURL(resolveHtmlPath('index.html'));
+  mb.on('ready', () => {
+    console.log('Menubar app is ready.');
+  });
 
-  mainWindow.on('ready-to-show', () => {
-    if (!mainWindow) {
-      throw new Error('"mainWindow" is not defined');
+  mb.on('after-create-window', () => {
+    if (process.platform === 'darwin') {
+      app.dock.hide();
     }
-    if (process.env.START_MINIMIZED) {
-      mainWindow.minimize();
-    } else {
-      mainWindow.show();
-    }
+    mb.window?.webContents.send('init-menubar', {
+      applicationDir,
+    });
   });
 
-  mainWindow.on('closed', () => {
-    mainWindow = null;
-  });
-
-  const menuBuilder = new MenuBuilder(mainWindow);
-  menuBuilder.buildMenu();
-
-  // Open urls in the user's browser
-  mainWindow.webContents.on('new-window', (event, url) => {
-    event.preventDefault();
-    shell.openExternal(url);
-  });
-
-  // Remove this if your app does not use auto updates
-  // eslint-disable-next-line
   new AppUpdater();
 };
 
@@ -127,11 +121,11 @@ app.on('window-all-closed', () => {
 app
   .whenReady()
   .then(() => {
-    createWindow();
+    createMenubar(APPLICATION_DIR);
     app.on('activate', () => {
       // On macOS it's common to re-create a window in the app when the
       // dock icon is clicked and there are no other windows open.
-      if (mainWindow === null) createWindow();
+      // if (mainWindow === null) createWindow();
     });
   })
   .catch(console.log);
