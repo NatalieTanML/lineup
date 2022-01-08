@@ -14,6 +14,11 @@ contextBridge.exposeInMainWorld('electron', {
       return ipcRenderer.sendSync('get-meetings');
     },
   },
+  updates: {
+    listen(func) {
+      ipcRenderer.on('new-updates', (event, ...args) => func(...args));
+    },
+  },
   ipcRenderer: {
     myPing() {
       ipcRenderer.send('ipc-example', 'ping');

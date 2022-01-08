@@ -12,13 +12,11 @@ import 'core-js/stable';
 import { app, ipcMain } from 'electron';
 import log from 'electron-log';
 import { autoUpdater } from 'electron-updater';
-import { UUID } from 'electron-updater/node_modules/builder-util-runtime';
 import Email from 'email/Email';
 import { menubar } from 'menubar';
 import path from 'path';
 import 'regenerator-runtime/runtime';
 import { resolveHtmlPath } from './util';
-// const { contextBridge, ipcRenderer } = require('electron');
 import EmailService from '../email';
 import { Meetings, Preferences, Credential, Meeting } from '../data';
 
@@ -75,7 +73,7 @@ ipcMain.on('auth-login', async (event, credential: Credential) => {
         }
         meetings.addMeeting(
           new Meeting(
-            new UUID(email.subject).toString(),
+            email.subject,
             email.date,
             email.subject,
             email.from,
@@ -84,6 +82,7 @@ ipcMain.on('auth-login', async (event, credential: Credential) => {
         );
       }
     }
+    event.sender.send('new-updates', 'fetch');
 
     inbox.listenForUpdates(async (email) => {
       if (email.message?.search(re)) {
@@ -94,7 +93,7 @@ ipcMain.on('auth-login', async (event, credential: Credential) => {
         }
         meetings.addMeeting(
           new Meeting(
-            new UUID(email.subject).toString(),
+            email.subject,
             email.date,
             email.subject,
             email.from,
@@ -102,7 +101,7 @@ ipcMain.on('auth-login', async (event, credential: Credential) => {
           )
         );
       }
-      event.sender.send('ipc-example', 'ping');
+      event.sender.send('new-updates', 'fetch');
     });
   }
 });
