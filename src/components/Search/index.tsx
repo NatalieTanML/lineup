@@ -17,7 +17,7 @@ const Search = ({ keyword, setKeyword, title, placeholder }: Props) => {
         name="search"
         id="search"
         title={title}
-        className="flex-grow px-4 pr-12 py-2 rounded-md appearance-none border-2 border-slate-750 bg-slate-800 text-slate-50 hover:border-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent placeholder:text-slate-500"
+        className="flex-grow px-4 pr-12 py-2 rounded-md appearance-none border-2 border-slate-750 bg-slate-800 text-slate-50 transition duration-200 ease-in-out hover:border-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent placeholder:text-slate-500"
         placeholder={placeholder}
         value={keyword}
         onChange={(e) => setKeyword(e.target.value)}
