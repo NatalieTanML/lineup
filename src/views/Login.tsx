@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 
-const Login = () => {
+interface Props {
+  onLogin: (username: string, password: string) => void;
+}
+
+const Login = ({ onLogin }: Props) => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
 
@@ -36,6 +40,7 @@ const Login = () => {
             />
           </label>
           <button
+            onClick={() => onLogin(email, password)}
             type="button"
             className="block w-full py-2 mt-6 justify-center border border-transparent text-sm font-medium rounded-md text-slate-50 bg-blue-500 transition duration-200 ease-in-out hover:bg-blue-400 focus:outline-none focus:ring-0 active:bg-blue-600"
           >

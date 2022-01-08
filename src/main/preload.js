@@ -2,6 +2,9 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electron', {
   auth: {
+    checkLoginStatus() {
+      return ipcRenderer.sendSync('check-login-status');
+    },
     login(email, password) {
       return ipcRenderer.sendSync('auth-login', {
         email,

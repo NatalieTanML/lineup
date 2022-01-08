@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Meeting, Meetings } from 'data';
+import React, { useState } from 'react';
+import { Meeting } from 'data';
 // import EmailService from '../email';
 
 import { HiOutlineCog } from 'react-icons/hi';
@@ -8,20 +8,12 @@ import ListItem from 'components/ListItem';
 import Search from 'components/Search';
 import Header from '../components/Header';
 
-const MenuBar = ({}: {}) => {
-  const [meetings, setMeetings] = useState<Meeting[]>([]);
-  const [groupedMeetings, setGroupedMeetings] = useState<
-    Record<string, Meeting[]>
-  >({});
-  const [input, setInput] = useState<string>('');
+interface Props {
+  meetings: Meeting[];
+}
 
-  const isLoggedIn = window.electron.auth.login(
-    'sumofabiatch45@gmail.com',
-    'HackAndRoll2022'
-  );
-  console.log(isLoggedIn);
-  const mtgs = window.electron.meetings.get();
-  console.log(mtgs);
+const MenuBar = ({ meetings }: Props) => {
+  const [input, setInput] = useState<string>('');
 
   const groupMeetingsByDate = (mtgs: Meeting[]) => {
     return mtgs.reduce((groups, mtg) => {
@@ -36,8 +28,7 @@ const MenuBar = ({}: {}) => {
 
   const filterByCurrentInput = (mtgs: Meeting[]) => {
     const inputString = input.toLowerCase().trim();
-    // console.log('meetings:', mtgs);
-    let filtered = mtgs.filter(
+    const filtered = mtgs.filter(
       (meeting) =>
         meeting.datetime
           .toLocaleDateString('en-US', { dateStyle: 'full' })
@@ -48,21 +39,7 @@ const MenuBar = ({}: {}) => {
     return groupMeetingsByDate(filtered);
   };
 
-  useEffect(() => {
-    // The purpose of having this cancel variable is to prevent memory leaks
-    // by using it in the callback and the cleanup function.
-    // Ref: https://dev.to/jexperton/how-to-fix-the-react-memory-leak-warning-d4i
-    let cancel = false;
-
-    if (!cancel) {
-      setMeetings(mtgs);
-      setGroupedMeetings(filterByCurrentInput(meetings));
-    }
-
-    return () => {
-      cancel = true;
-    };
-  });
+  const groupedMeetings = filterByCurrentInput(meetings);
 
   return (
     <div className="container mx-auto px-4 my-3 w-full">

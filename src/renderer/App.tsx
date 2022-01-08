@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { MemoryRouter as Router, Route, Routes } from 'react-router-dom';
 import MenuBar from 'views/MenuBar';
 import Login from 'views/Login';
@@ -8,6 +9,7 @@ declare global {
   interface Window {
     electron: {
       auth: {
+        checkLoginStatus: () => boolean;
         login: (email: string, password: string) => boolean;
       };
       meetings: {
@@ -21,11 +23,38 @@ declare global {
 }
 
 export default function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [meetings, setMeetings] = useState<Meeting[]>([]);
+
+  const refreshMeetings = () => {
+    setMeetings(window.electron.meetings.get());
+  };
+
+  const onLogin = async (username: string, password: string) => {
+    window.electron.auth.login(username, password);
+    setIsLoggedIn(true);
+    window.electron.updates.listen(() => {
+      refreshMeetings();
+    });
+  };
+
+  if (!isLoggedIn && window.electron.auth.checkLoginStatus()) {
+    onLogin('', ''); // Lmao.
+  }
+
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<MenuBar />} />
-        <Route path="login" element={<Login />} />
+        <Route
+          path="/"
+          element={
+            isLoggedIn ? (
+              <MenuBar meetings={meetings} />
+            ) : (
+              <Login onLogin={onLogin} />
+            )
+          }
+        />
       </Routes>
     </Router>
   );

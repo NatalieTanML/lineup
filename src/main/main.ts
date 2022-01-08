@@ -39,6 +39,10 @@ if (account !== undefined) {
   inbox = new EmailService(account.email, account.password);
 }
 
+ipcMain.on('check-login-status', async (event) => {
+  event.returnValue = preferences.getCredential() !== undefined;
+});
+
 ipcMain.on('auth-login', async (event, credential: Credential) => {
   if (preferences.getCredential() === undefined) {
     preferences.updateCredential(credential.email, credential.password);
@@ -104,6 +108,10 @@ ipcMain.on('auth-login', async (event, credential: Credential) => {
       event.sender.send('new-updates', 'fetch');
     });
   }
+});
+
+ipcMain.on('get-meetings', (event) => {
+  event.returnValue = meetings.getMeetings();
 });
 
 ipcMain.on('ipc-example', async (event, arg) => {
