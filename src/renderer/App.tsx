@@ -12,6 +12,9 @@ declare global {
       meetings: {
         get: () => Meeting[];
       };
+      updates: {
+        listen: (func: (...args: unknown[]) => void) => void;
+      };
     };
   }
 }
