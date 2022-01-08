@@ -8,14 +8,20 @@
  * When running `npm run build` or `npm run build:main`, this file is compiled to
  * `./src/main.js` using webpack. This gives us some performance wins.
  */
+import { match } from 'assert';
 import 'core-js/stable';
+import { Meetings, Preferences, Credential, Meeting } from 'data';
 import { app, ipcMain } from 'electron';
 import log from 'electron-log';
 import { autoUpdater } from 'electron-updater';
+import { UUID } from 'electron-updater/node_modules/builder-util-runtime';
+import EmailService from 'email';
+import Email from 'email/Email';
 import { menubar } from 'menubar';
 import path from 'path';
 import 'regenerator-runtime/runtime';
 import { resolveHtmlPath } from './util';
+// const { contextBridge, ipcRenderer } = require('electron');
 import EmailService from '../email';
 import { Meetings, Preferences, Credential } from '../data';
 
@@ -47,27 +53,56 @@ ipcMain.on('auth-login', async (event, credential: Credential) => {
 
   if (inbox !== null) {
     const lastQueriedAt = preferences.getLastQueryDateTime();
-    let emails = [];
-    if (lastQueriedAt === undefined) {
-      const latestSequence = await inbox.getLatestInboxSequence();
-      emails = await inbox.fetchEmailInRange(
-        latestSequence === 0 ? 0 : 1,
-        latestSequence
-      );
+    let emails: Email[] = [];
+    if (preferences.getLastQueryDateTime() === undefined) {
+      const latestSequence = await inbox?.getLatestInboxSequence();
+      const emails = await inbox?.fetchEmailInRange(latestSequence === 0 ? 0 : 1, latestSequence);
+
     } else {
       emails = await inbox.fetchEmailSince(lastQueriedAt);
     }
+
     preferences.updateLastQueryDateTime(new Date());
-    // Process and find zoom emails, persist to storage and ping frontend to refresh.
+
+    const re = /https:\/\/(.*\.)?zoom.us\/j\/[0-9]+(\?pwd=[a-zA-Z0-9]+)?/;
+    const meetings = window.Electron.meetings.get();
+    const isLoggedIn = window.Electron.auth.login('sumofabiatch45@gmail.com', 'HackAndRoll2022');
+
+    if (isLoggedIn) {
+      for await (let email of emails) {
+        if (email.message?.search(re)) {
+          let url = email.message?.match(re);
+          let urll = "";
+          if (url) {
+            urll = url[0].toString();
+          }
+          meetings.addMeeting(new Meeting(new UUID(email.subject).toString(), email.date, email.subject, email.from, urll));
+        }
+      }
+    }
+
+    event.sender.send("ipc-example", "ping");
 
     inbox.listenForUpdates(async (email) => {
-      // Process and find zoom emails, persist to storage and ping frontend to refresh.
+      if (isLoggedIn) {
+          if (email.message?.search(re)) {
+            let url = email.message?.match(re);
+            let urll = "";
+            if (url) {
+              urll = url[0].toString();
+            }
+            meetings.addMeeting(new Meeting(new UUID(email.subject).toString(), email.date, email.subject, email.from, urll));
+          }
+      }
+      event.sender.send("ipc-example", "ping");
     });
   }
-});
+})
 
-ipcMain.on('get-meetings', async (event) => {
-  event.returnValue = meetings.getMeetings();
+ipcMain.on('ipc-example', async (event, arg) => {
+  const msgTemplate = (pingPong: string) => `IPC test: ${pingPong}`;
+  console.log(msgTemplate(arg));
+  event.reply('ipc-example', msgTemplate('pong'));
 });
 
 if (process.env.NODE_ENV === 'production') {
