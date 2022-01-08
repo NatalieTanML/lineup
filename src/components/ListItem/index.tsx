@@ -5,11 +5,11 @@ import IconButton from '../IconButton';
 
 const ListItem = () => {
   const styleName =
-    'text-slate-50 bg-blue-500 hover:text-white hover:bg-blue-400 active:bg-blue-600 hover:stroke-current hover:border-transparent';
+    'text-slate-50 bg-blue-500 transition duration-200 ease-in-out hover:text-white hover:bg-blue-400 active:bg-blue-600 hover:stroke-current hover:border-transparent';
   const styleNameLoading = 'text-slate-50 bg-blue-600';
 
   return (
-    <div className="flex flex-row relative block bg-slate-750 hover:bg-slate-700 rounded-md p-3 mb-3">
+    <div className="flex flex-row relative block bg-slate-750 transition duration-200 ease-in-out hover:bg-slate-700 rounded-md p-3 mb-3">
       <div className="flex flex-1 items-center gap-x-3">
         <p className="flex-grow font-semibold text-lg text-white">
           Daily standup

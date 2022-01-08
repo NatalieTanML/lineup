@@ -17,7 +17,7 @@ const Header = ({ title, btnContent, handleClick }: Props) => {
         <button
           type="button"
           onClick={handleClick}
-          className="text-slate-400 hover:stroke-current hover:text-blue-400 focus:outline-none active:text-blue-500 cursor-pointer"
+          className="text-slate-400 transition duration-200 ease-in-out hover:stroke-current hover:text-blue-400 focus:outline-none active:text-blue-500 cursor-pointer"
         >
           <IconContext.Provider value={{ size: '1.5em' }}>
             {btnContent}
