@@ -93,6 +93,37 @@ export default class EmailService {
       return emails;
     });
 
+  fetchEmailSince = (since: Date): Promise<Email[]> =>
+    this.#connectAndExec(async () => {
+      const sequences = await this.#mail.search({
+        since,
+      });
+      const messages = await this.#mail.fetch(sequences, {
+        envelope: true,
+        source: true,
+      });
+      const emails: Email[] = [];
+      // eslint-disable-next-line no-restricted-syntax
+      for await (const message of messages) {
+        const content = await simpleParser(message.source);
+        emails.push(
+          new Email(
+            message.envelope.date,
+            message.envelope.from.reduce(
+              (acc, sender) =>
+                sender.name !== undefined && sender.address !== undefined
+                  ? [...acc, new EmailUser(sender.name, sender.address)]
+                  : acc,
+              <EmailUser[]>[]
+            ),
+            message.envelope.subject,
+            content.text
+          )
+        );
+      }
+      return emails;
+    });
+
   disconnect() {
     if (this.#connected) this.#mail.close();
     this.#connected = false;

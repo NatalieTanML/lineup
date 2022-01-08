@@ -21,8 +21,9 @@ import { menubar } from 'menubar';
 import path from 'path';
 import 'regenerator-runtime/runtime';
 import { resolveHtmlPath } from './util';
-const { contextBridge, ipcRenderer } = require('electron');
-
+// const { contextBridge, ipcRenderer } = require('electron');
+import EmailService from '../email';
+import { Meetings, Preferences, Credential } from '../data';
 
 export default class AppUpdater {
   constructor() {
@@ -39,7 +40,7 @@ const meetings = new Meetings();
 const preferences = new Preferences();
 
 const account = preferences.getCredential();
-if (account != undefined) {
+if (account !== undefined) {
   inbox = new EmailService(account.email, account.password);
 }
 
@@ -154,9 +155,8 @@ const createMenubar = async (applicationDir: string) => {
       skipTaskbar: true,
       resizable: !app.isPackaged,
       webPreferences: {
-        nodeIntegration: true,
-        // enableRemoteModule: true,
         devTools: !app.isPackaged,
+        preload: path.join(__dirname, 'preload.js'),
       },
     },
   });
@@ -174,7 +174,7 @@ const createMenubar = async (applicationDir: string) => {
     });
   });
 
-  new AppUpdater();
+  // new AppUpdater();
 };
 
 /**
@@ -184,6 +184,7 @@ const createMenubar = async (applicationDir: string) => {
 app.on('window-all-closed', () => {
   // Respect the OSX convention of having the application in memory even
   // after all windows have been closed
+  inbox?.disconnect();
   if (process.platform !== 'darwin') {
     app.quit();
   }
