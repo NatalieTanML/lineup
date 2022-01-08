@@ -12,10 +12,13 @@ import 'core-js/stable';
 import { app, ipcMain } from 'electron';
 import log from 'electron-log';
 import { autoUpdater } from 'electron-updater';
+import Email from 'email/Email';
 import { menubar } from 'menubar';
 import path from 'path';
 import 'regenerator-runtime/runtime';
 import { resolveHtmlPath } from './util';
+import EmailService from '../email';
+import { Meetings, Preferences, Credential, Meeting } from '../data';
 
 export default class AppUpdater {
   constructor() {
@@ -26,6 +29,90 @@ export default class AppUpdater {
 }
 
 const APPLICATION_DIR = app.getPath('userData');
+
+let inbox: EmailService | null = null;
+const meetings = new Meetings();
+const preferences = new Preferences();
+
+const account = preferences.getCredential();
+if (account !== undefined) {
+  inbox = new EmailService(account.email, account.password);
+}
+
+ipcMain.on('check-login-status', async (event) => {
+  event.returnValue = preferences.getCredential() !== undefined;
+});
+
+ipcMain.on('auth-login', async (event, credential: Credential) => {
+  if (preferences.getCredential() === undefined) {
+    preferences.updateCredential(credential.email, credential.password);
+    inbox = new EmailService(credential.email, credential.password);
+  }
+  event.returnValue = true;
+
+  if (inbox !== null) {
+    const lastQueriedAt = preferences.getLastQueryDateTime();
+    let emails: Email[] = [];
+    if (lastQueriedAt === undefined) {
+      const latestSequence = await inbox?.getLatestInboxSequence();
+      emails = await inbox?.fetchEmailInRange(
+        latestSequence === 0 ? 0 : 1,
+        latestSequence
+      );
+    } else {
+      emails = await inbox.fetchEmailSince(lastQueriedAt);
+    }
+
+    preferences.updateLastQueryDateTime(new Date());
+
+    const re = /https:\/\/(.*\.)?zoom.us\/j\/[0-9]+(\?pwd=[a-zA-Z0-9]+)?/;
+
+    // eslint-disable-next-line no-restricted-syntax
+    for (const email of emails) {
+      if (email.message?.search(re)) {
+        const url = email.message?.match(re);
+        let urll = '';
+        if (url) {
+          urll = url[0].toString();
+        }
+        meetings.addMeeting(
+          new Meeting(
+            email.subject,
+            email.date,
+            email.subject,
+            email.from,
+            urll
+          )
+        );
+      }
+    }
+    event.sender.send('new-updates', 'fetch');
+
+    inbox.listenForUpdates(async (email) => {
+      if (email.message?.search(re)) {
+        const url = email.message?.match(re);
+        let urll = '';
+        if (url) {
+          urll = url[0].toString();
+        }
+        meetings.addMeeting(
+          new Meeting(
+            email.subject,
+            email.date,
+            email.subject,
+            email.from,
+            urll
+          )
+        );
+      }
+      event.sender.send('new-updates', 'fetch');
+    });
+  }
+});
+
+ipcMain.on('get-meetings', (event) => {
+  event.returnValue = meetings.getMeetings();
+});
 
 ipcMain.on('ipc-example', async (event, arg) => {
   const msgTemplate = (pingPong: string) => `IPC test: ${pingPong}`;
@@ -83,9 +170,8 @@ const createMenubar = async (applicationDir: string) => {
       skipTaskbar: true,
       resizable: !app.isPackaged,
       webPreferences: {
-        nodeIntegration: true,
-        // enableRemoteModule: true,
         devTools: !app.isPackaged,
+        preload: path.join(__dirname, 'preload.js'),
       },
     },
   });
@@ -103,7 +189,7 @@ const createMenubar = async (applicationDir: string) => {
     });
   });
 
-  new AppUpdater();
+  // new AppUpdater();
 };
 
 /**
@@ -113,6 +199,7 @@ const createMenubar = async (applicationDir: string) => {
 app.on('window-all-closed', () => {
   // Respect the OSX convention of having the application in memory even
   // after all windows have been closed
+  inbox?.disconnect();
   if (process.platform !== 'darwin') {
     app.quit();
   }
