@@ -2,6 +2,20 @@ import { MemoryRouter as Router, Route, Routes } from 'react-router-dom';
 import MenuBar from 'views/MenuBar';
 import Login from 'views/Login';
 import './App.css';
+import { Meeting } from '../data';
+
+declare global {
+  interface Window {
+    electron: {
+      auth: {
+        login: (email: string, password: string) => boolean;
+      };
+      meetings: {
+        get: () => Meeting[];
+      };
+    };
+  }
+}
 
 export default function App() {
   return (
